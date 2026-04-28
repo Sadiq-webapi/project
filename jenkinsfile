@@ -18,11 +18,15 @@ pipeline {
                     credentialsId: 'github-token'
             }
         }
-        stage('Plan') {
+       stage('Plan') {
             steps {
-                sh 'pwd; cd project-1/ ; terraform init'
-                sh "pwd; cd project-1/ ; terraform plan -var='env=${params.ENVIRONMENT}' -out tfplan"
-                sh 'pwd; cd project-1/ ; terraform show -no-color tfplan > tfplan.txt'
+                // 'bat' is used for Windows Batch commands
+                // '&&' ensures the second command only runs if the first one succeeds
+                bat 'cd project-1 && terraform init'
+                
+                bat "cd project-1 && terraform plan -var=\"env=${params.ENVIRONMENT}\" -out tfplan"
+                
+                bat 'cd project-1 && terraform show -no-color tfplan > tfplan.txt'
             }
         }
         stage('Approval') {
