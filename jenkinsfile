@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+    parameters {
+        choice(name: 'terraformAction', choices: ['apply', 'destroy'], description: 'Action')
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'prod'], description: 'Env')
+    }
+    environment {
+        AWS_ACCESS_KEY_ID     = credentials('aws-access-key')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
+        AWS_DEFAULT_REGION    = 'us-east-1'
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout into the root workspace
+                git branch: 'infra', 
+                    url: 'https://github.com/ManojKRISHNAPPA/complete-cicd-project-m.git',
+                    credentialsId: 'github-token'
+            }
+        }
+        stage('Plan') {
+            steps {
+                sh 'pwd; cd project-1/ ; terraform init'
+                sh "pwd; cd project-1/ ; terraform plan -var='env=${params.ENVIRONMENT}' -out tfplan"
+                sh 'pwd; cd project-1/ ; terraform show -no-color tfplan > tfplan.txt'
+            }
+        }
+        stage('Approval') {
+            steps {
+                script {
+                    // Path must match the 'cd' directory used above
+                    def plan = readFile 'project-1/tfplan.txt'
+                    input message: "Do you want to proceed?",
+                          parameters: [text(name: 'Plan', defaultValue: plan, description: 'Review Plan')]
+                }
+            }
+        }
+        stage('Apply or Destroy') {
+            when { expression { return params.terraformAction == 'apply' || params.terraformAction == 'destroy' } }
+            steps {
+                script {
+                    if (params.terraformAction == 'apply') {
+                        sh 'cd project-1/ ; terraform apply -input=false tfplan'
+                    } else {
+                        sh "cd project-1/ ; terraform destroy -var='env=${params.ENVIRONMENT}' -auto-approve"
+                    }
+                }
+            }
+        }
+    }
+}
