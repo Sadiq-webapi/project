@@ -18,24 +18,25 @@ pipeline {
                     credentialsId: 'github-token'
             }
         }
-       stage('Plan') {
+      stage('Plan') {
             steps {
-                // 'bat' is used for Windows Batch commands
-                // '&&' ensures the second command only runs if the first one succeeds
+                // In Windows CMD, we use '&&' to chain commands
                 bat 'cd project-1 && terraform init'
                 
+                // Use double quotes for the command to allow parameter injection
                 bat "cd project-1 && terraform plan -var=\"env=${params.ENVIRONMENT}\" -out tfplan"
                 
+                // Export the plan to text so the Approval stage can read it
                 bat 'cd project-1 && terraform show -no-color tfplan > tfplan.txt'
             }
         }
         stage('Approval') {
             steps {
                 script {
-                    // Path must match the 'cd' directory used above
+                    // Reference the file inside the project-1 folder
                     def plan = readFile 'project-1/tfplan.txt'
                     input message: "Do you want to proceed?",
-                          parameters: [text(name: 'Plan', defaultValue: plan, description: 'Review Plan')]
+                          parameters: [text(name: 'Plan', defaultValue: plan, description: 'Please review the Terraform plan')]
                 }
             }
         }
