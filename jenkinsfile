@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout into the root workspace
-                git branch: 'infra', 
+                git branch: 'terraform-projects', 
                     url: 'https://github.com/Sadiq-webapi/DevOps-Project-Series.git',
                     credentialsId: 'github-token'
             }
