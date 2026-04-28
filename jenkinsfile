@@ -14,7 +14,7 @@ pipeline {
             steps {
                 // Checkout into the root workspace
                 git branch: 'infra', 
-                    url: 'https://github.com/ManojKRISHNAPPA/complete-cicd-project-m.git',
+                    url: 'https://github.com/Sadiq-webapi/DevOps-Project-Series.git',
                     credentialsId: 'github-token'
             }
         }
